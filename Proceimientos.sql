@@ -3,22 +3,28 @@
 -- junto con sus ingredientes en `pizza_ingrediente`.
 
 DELIMITER $$
+DROP PROCEDURE IF EXISTS `ps_add_pizza_con_ingredientes` $$
 
-CREATE PROCEDURE `ps_add_pizza_con_ingredientes`(IN p_nombre_pizza VARCHAR(100), p_precio DECIMAL(10,2), p_ids_ingredientes INT)
+CREATE PROCEDURE `ps_add_pizza_con_ingredientes`(IN p_nombre_pizza VARCHAR(100), p_precio DECIMAL(10,2), p_tipo_producto_id INT, p_ingrediente VARCHAR(100), p_stock INT, p_ingrediente_precio INT)
+SQL SECURITY INVOKER
 BEGIN
-    ciclo : LOOP
-    
+    DECLARE nuevo_id INT;
+    SET nuevo_id = LAST_INSERT_ID();
+    INSERT INTO producto (nombre, tipo_producto_id)VALUES (p_nombre_pizza, p_tipo_producto_id);
+    INSERT INTO producto_presentacion (producto_id, presentacion_id, precio)VALUES (nuevo_id, 1, p_precio);
+    INSERT INTO ingrediente (nombre,stock,precio) VALUES (p_ingrediente,p_stock,p_ingrediente_precio );
+    SELECT CONCAT('Pizza "', p_nombre_pizza, '" agregada con ID ', nuevo_id) AS mensaje;
 END $$
 
 DELIMITER ;
 
-CALL `ps_add_pizza_con_ingredientes`('Pizza Carne',5000,10)
+CALL `ps_add_pizza_con_ingredientes`('Pizza Chetos',4000, 2, 'Cheso', 10, 200)
 
 -- 2. Actualizar precio Pizza
 -- Procedimiento que reciba `p_pizza_id` y `p_nuevo_precio` y actualice el precio.
 
 DELIMITER $$
-
+DROP PROCEDURE IF EXISTS `ps_actualizar_precio_pizza` $$
 CREATE PROCEDURE `ps_actualizar_precio_pizza` (IN p_pizza_id INT, IN p_precio DECIMAL(10,2))
 BEGIN
     DECLARE existe INT;
@@ -31,11 +37,12 @@ BEGIN
         WHERE producto_id = p_pizza_id;
         SELECT 'Precios actualizados en todas las presentaciones' AS mensaje;
     ELSE
-        SELECT 'El producto no existe o no es una pizza' AS mensaje;
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Producto no existe o Tipo de producto erroneo';
     END IF;
 END $$
 
 DELIMITER ;
 
-CALL `ps_actualizar_precio_pizza`(2,9909)
+CALL `ps_actualizar_precio_pizza`(1,9909)
 
