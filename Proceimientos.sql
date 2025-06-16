@@ -93,3 +93,30 @@ DELIMITER ;
 
 CALL ps_generar_pedido(1, 1, 1, 1);
 
+-- 4. Cancelar Pedido
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS ps_cancelar_pedido $$
+CREATE PROCEDURE ps_cancelar_pedido(IN p_pedido_id INT)
+BEGIN
+    DECLARE existe INT;
+
+    SELECT COUNT(*) INTO existe
+    FROM pedido
+    WHERE id = p_pedido_id;
+
+    IF existe > 0 THEN
+        UPDATE pedido
+        SET 
+            fecha_recogida = '1900-01-01 00:00:00',
+            total = 0
+        WHERE id = p_pedido_id;
+
+        SELECT CONCAT('Pedido cancelado: ', p_pedido_id) AS Resultado;
+    ELSE
+        SELECT 'No existe' AS Resultado;
+    END IF;
+END $$
+DELIMITER ;
+
+CALL ps_cancelar_pedido(1);
