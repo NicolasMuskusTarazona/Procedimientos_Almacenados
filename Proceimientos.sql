@@ -1,4 +1,4 @@
--- Active: 1749813797455@@127.0.0.1@3307@Pizzeria
+-- Active: 1748978904024@@127.0.0.1@3307@Pizzeria
 -- 1. Crea un procedimiento que inserte una nueva pizza en la tabla `pizza` 
 -- junto con sus ingredientes en `pizza_ingrediente`.
 
@@ -13,7 +13,7 @@ BEGIN
     INSERT INTO producto (nombre, tipo_producto_id)VALUES (p_nombre_pizza, p_tipo_producto_id);
     INSERT INTO producto_presentacion (producto_id, presentacion_id, precio)VALUES (nuevo_id, 1, p_precio);
     INSERT INTO ingrediente (nombre,stock,precio) VALUES (p_ingrediente,p_stock,p_ingrediente_precio );
-    SELECT CONCAT('Pizza "', p_nombre_pizza, '" agregada con ID ', nuevo_id) AS mensaje;
+    SELECT CONCAT('Pizza "', p_nombre_pizza, '" agregada con ID ', nuevo_id, ' Ingrediente: ', p_ingrediente) AS mensaje;
 END $$
 
 DELIMITER ;
@@ -26,6 +26,7 @@ CALL `ps_add_pizza_con_ingredientes`('Pizza Chetos',4000, 2, 'Cheso', 10, 200)
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `ps_actualizar_precio_pizza` $$
 CREATE PROCEDURE `ps_actualizar_precio_pizza` (IN p_pizza_id INT, IN p_precio DECIMAL(10,2))
+SQL SECURITY INVOKER
 BEGIN
     DECLARE existe INT;
     SELECT COUNT(*) INTO existe
@@ -44,5 +45,51 @@ END $$
 
 DELIMITER ;
 
-CALL `ps_actualizar_precio_pizza`(1,9909)
+CALL `ps_actualizar_precio_pizza`(2,9909)
+
+
+-- 3. Insertar un pedido
+-- Para cada ítem, inserta en `detalle_pedido` y en `detalle_pedido_pizza`.
+-- Si todo va bien, hace `COMMIT`; si falla, `ROLLBACK` y devuelve un mensaje de error.
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS ps_generar_pedido $$
+CREATE PROCEDURE ps_generar_pedido(IN p_cliente_id INT, IN p_metodo_pago_id INT, IN p_producto_id INT, IN p_cantidad INT)
+BEGIN
+    DECLARE v_pedido_id INT;
+    DECLARE v_detalle_id INT;
+    DECLARE v_precio DECIMAL(10,2);
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        ROLLBACK;
+        SELECT 'RollBack' AS mensaje;
+    END;
+
+    START TRANSACTION;
+    INSERT INTO pedido(fecha_recogida, total, cliente_id, metodo_pago_id) VALUES (NOW(), 0.00, p_cliente_id, p_metodo_pago_id);
+
+    SET v_pedido_id = LAST_INSERT_ID();
+
+    INSERT INTO detalle_pedido(pedido_id, cantidad) VALUES (v_pedido_id, p_cantidad);
+
+    SET v_detalle_id = LAST_INSERT_ID();
+
+    INSERT INTO detalle_pedido_producto(detalle_id, producto_id) VALUES (v_detalle_id, p_producto_id);
+
+    SELECT MIN(producto_presentacion.precio)
+    INTO v_precio
+    FROM producto_presentacion
+    WHERE producto_presentacion.producto_id = p_producto_id;
+
+    UPDATE pedido
+    SET total = v_precio * p_cantidad
+    WHERE id = v_pedido_id;
+
+    COMMIT;
+    SELECT 'Pedido realizado' AS mensaje, v_pedido_id AS pedido_id;
+END $$
+DELIMITER ;
+
+
+CALL ps_generar_pedido(1, 1, 1, 1);
 
