@@ -25,3 +25,26 @@ END $$
 DELIMITER ;
 
 SELECT fc_calcular_subtotal_pizza(1) AS subtotal;
+
+-- 2. Descuento por Cantidad
+
+DELIMITER $$
+
+CREATE FUNCTION fc_descuento_por_cantidad(p_cantidad INT,p_precio_unitario DECIMAL(10,2))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE v_descuento DECIMAL(10,2);
+
+    IF p_cantidad >= 5 THEN
+        SET v_descuento = p_precio_unitario * p_cantidad * 0.10;
+    ELSE
+        SET v_descuento = 0;
+    END IF;
+
+    RETURN v_descuento;
+END $$
+
+DELIMITER ;
+
+SELECT fc_descuento_por_cantidad(6, 20000) AS descuento;
