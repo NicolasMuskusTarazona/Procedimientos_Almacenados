@@ -48,3 +48,28 @@ END $$
 DELIMITER ;
 
 SELECT fc_descuento_por_cantidad(6, 20000) AS descuento;
+
+-- 3.Precio final del pedido
+
+DELIMITER $$
+CREATE FUNCTION fc_precio_final_pedido(p_pedido_id INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE v_total DECIMAL(10,2) DEFAULT 0;
+
+    SELECT SUM(
+        detalle_pedido.cantidad * fc_calcular_subtotal_pizza(detalle_pedido_producto.producto_id)
+        - fc_descuento_por_cantidad(detalle_pedido.cantidad, fc_calcular_subtotal_pizza(detalle_pedido_producto.producto_id))
+    )
+    INTO v_total
+    FROM detalle_pedido 
+    JOIN detalle_pedido_producto ON detalle_pedido.id = detalle_pedido_producto.detalle_id
+    WHERE detalle_pedido.pedido_id = p_pedido_id;
+
+    RETURN IFNULL(v_total, 0);
+END $$
+
+DELIMITER ;
+
+SELECT fc_precio_final_pedido(1) AS total_final;
