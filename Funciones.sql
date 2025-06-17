@@ -94,3 +94,25 @@ END $$
 DELIMITER ;
 
 SELECT fc_obtener_stock_ingrediente(2) AS stock_actual;
+
+
+-- 5. Pizza popular
+
+DELIMITER $$
+
+CREATE FUNCTION fc_es_pizza_popular(p_pizza_id INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE v_total INT;
+
+    SELECT COUNT(*) INTO v_total
+    FROM detalle_pedido_producto
+    WHERE producto_id = p_pizza_id;
+
+    RETURN IF(v_total > 50, 1, 0);
+END $$
+
+DELIMITER ;
+
+SELECT fc_es_pizza_popular(3) AS es_popular;
