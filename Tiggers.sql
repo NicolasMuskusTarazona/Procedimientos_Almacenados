@@ -31,3 +31,21 @@ END $$
 
 DELIMITER ;
 UPDATE ingrediente  SET stock = 19 WHERE id = 1;
+
+-- 3. Actualizar Precio Producto
+
+DELIMITER $$
+
+CREATE TRIGGER tg_validar_cambio_precio
+BEFORE UPDATE ON producto_presentacion
+FOR EACH ROW
+BEGIN
+    IF NEW.precio <> OLD.precio THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Precio actualizado correctamente';
+    END IF;
+END $$
+
+DELIMITER ;
+
+UPDATE producto_presentacion SET precio = 6000 WHERE producto_id = 1 AND presentacion_id = 1;
