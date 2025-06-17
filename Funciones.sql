@@ -73,3 +73,24 @@ END $$
 DELIMITER ;
 
 SELECT fc_precio_final_pedido(1) AS total_final;
+
+-- 4. Obtener stock ingrediente
+
+DELIMITER $$
+
+CREATE FUNCTION fc_obtener_stock_ingrediente(p_ingrediente_id INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE v_stock INT;
+
+    SELECT stock INTO v_stock
+    FROM ingrediente
+    WHERE id = p_ingrediente_id;
+
+    RETURN IFNULL(v_stock, 0);
+END $$
+
+DELIMITER ;
+
+SELECT fc_obtener_stock_ingrediente(2) AS stock_actual;
