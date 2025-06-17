@@ -79,3 +79,19 @@ END $$
 DELIMITER ;
 
 UPDATE factura SET total = 60000 WHERE id = 1;
+
+-- 6. Eliminar Ingrediente 
+
+DELIMITER $$
+
+CREATE TRIGGER tg_prevenir_delete_ingrediente
+BEFORE DELETE ON ingrediente
+FOR EACH ROW
+BEGIN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'NO puedes eliminar el ingrediente actulizalo para hacer el "borrado"';
+END $$
+
+DELIMITER ;
+
+UPDATE ingrediente SET nombre = 'Eliminado', stock = 0, precio = 0.00 WHERE id = 1;
