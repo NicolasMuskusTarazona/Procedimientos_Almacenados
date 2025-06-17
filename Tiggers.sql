@@ -49,3 +49,18 @@ END $$
 DELIMITER ;
 
 UPDATE producto_presentacion SET precio = 6000 WHERE producto_id = 1 AND presentacion_id = 1;
+
+-- 4. Eliminar Producto
+DELIMITER $$
+
+CREATE TRIGGER tg_prevenir_delete_producto
+BEFORE DELETE ON producto
+FOR EACH ROW
+BEGIN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'NO puedes eliminar el producto actulizalo para hacer el "borrado"';
+END $$
+
+DELIMITER ;
+
+UPDATE producto SET nombre = 'Eliminado' WHERE id = 1;
